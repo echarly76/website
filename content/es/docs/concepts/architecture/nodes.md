@@ -38,12 +38,12 @@ El campo `conditions` describe el estado de todos los nodos en modo `Running`.
 
 | Estado  | Descripción |
 |--------------------|-------------|
-| `OutOfDisk`        | `True` si no hay espacio suficiente en el nodo para añadir nuevos pods; sino `False` |
+| `OutOfDisk`        | `True` si no hay espacio suficiente en el nodo para añadir nuevos pods; si no, `False` |
 | `Ready`            | `True` si el nodo está en buen estado y preparado para aceptar nuevos pods, `Falso` si no puede aceptar nuevos pods, y `Unknown` si el controlador aún no tiene constancia del nodo después del último `node-monitor-grace-period` (por defecto cada 40 segundos)|
-| `MemoryPressure`   | `True` si hay presión en la memoria del nodo -- es decir, si el consumo de memoria en el nodo es elevado; sino `False` |
-| `PIDPressure`    | `True` si el número de PIDs consumidos en el nodo es alto -- es decir, si hay demasiados procesos en el nodo; sino `False` |
-| `DiskPressure`   | `True` si hay presión en el tamaño del disco -- esto es, si la capacidad del disco es baja; sino `False` |
-| `NetworkUnavailable`  | `True` si la configuración de red del nodo no es correcta; sino `False` |
+| `MemoryPressure`   | `True` si hay presión en la memoria del nodo -- es decir, si el consumo de memoria en el nodo es elevado; si no, `False` |
+| `PIDPressure`    | `True` si el número de PIDs consumidos en el nodo es alto -- es decir, si hay demasiados procesos en el nodo; si no, `False` |
+| `DiskPressure`   | `True` si hay presión en el tamaño del disco -- esto es, si la capacidad del disco es baja; si no, `False` |
+| `NetworkUnavailable`  | `True` si la configuración de red del nodo no es correcta; si no, `False` |
 
 El estado del nodo se representa como un objeto JSON. Por ejemplo, la siguiente respuesta describe un nodo en buen estado:
 
@@ -94,7 +94,7 @@ A diferencia de [pods](/docs/concepts/workloads/pods/pod/) y [services](/docs/co
   }
 }
 ```
-Kubernetes crea un objeto `Node` internamente (la representación), y valida el nodo comprobando su salud en el campo `metadata.name`. Si el nodo es válido -- es decir, si todos los servicios necesarios están ejecutándose -- el nodo es elegible para correr un pod. Sino, es ignorado para cualquier actividad del clúster hasta que se convierte en un nodo válido.
+Kubernetes crea un objeto `Node` internamente (la representación), y valida el nodo comprobando su salud en el campo `metadata.name`. Si el nodo es válido -- es decir, si todos los servicios necesarios están ejecutándose -- el nodo es elegible para correr un pod. Si no, es ignorado para cualquier actividad del clúster hasta que se convierte en un nodo válido.
 
 {{< note >}}
 Kubernetes conserva el objeto de un nodo inválido y continúa probando por si el nodo, en algún momento, entrase en servicio.
@@ -120,7 +120,7 @@ En Kubernetes 1.4, se actualizó la lógica del controlador de nodos para gestio
 
 En la mayoría de los casos, el controlador de nodos limita el ritmo de desalojo `--node-eviction-rate` (0.1 por defecto) por segundo, lo que significa que no desalojará pods de más de un nodo cada diez segundos.
 
-El comportamiento de desalojo de nodos cambia cuando un nodo en una zona de disponibilidad tiene problemas. El controlador de nodos comprobará qué porcentaje de nodos en la zona no se encuentran en buen estado (es decir, que su condición `NodeReady` tiene un valor `ConditionUnknown` o `ConditionFalse`) al mismo tiempo. Si la fracción de nodos con problemas es de al menos `--unhealthy-zone-threshold` (0.55 por defecto) entonces se reduce el ratio de desalojos: si el clúster es pequeño (por ejemplo, tiene menos o los mismos nodos que `--large-cluster-size-threshold` - 50 por defecto) entonces los desalojos se paran. Sino, el ratio se reduce a `--secondary-node-eviction-rate` (0.01 por defecto) por segundo. La razón por la que estas políticas se implementan por zonas de disponibilidad es debido a que una zona puede quedarse aislada del nodo máster mientras que las demás continúan conectadas. Si un clúster no comprende más de una zona, todo el clúster se considera una única zona.
+El comportamiento de desalojo de nodos cambia cuando un nodo en una zona de disponibilidad tiene problemas. El controlador de nodos comprobará qué porcentaje de nodos en la zona no se encuentran en buen estado (es decir, que su condición `NodeReady` tiene un valor `ConditionUnknown` o `ConditionFalse`) al mismo tiempo. Si la fracción de nodos con problemas es de al menos `--unhealthy-zone-threshold` (0.55 por defecto) entonces se reduce el ratio de desalojos: si el clúster es pequeño (por ejemplo, tiene menos o los mismos nodos que `--large-cluster-size-threshold` - 50 por defecto) entonces los desalojos se paran. Si no, el ratio se reduce a `--secondary-node-eviction-rate` (0.01 por defecto) por segundo. La razón por la que estas políticas se implementan por zonas de disponibilidad es debido a que una zona puede quedarse aislada del nodo máster mientras que las demás continúan conectadas. Si un clúster no comprende más de una zona, todo el clúster se considera una única zona.
 
 La razón principal por la que se distribuyen nodos entre varias zonas de disponibilidad es para que el volumen de trabajo se transfiera a aquellas zonas que se encuentren en buen estado cuando una de las zonas se caiga.
 Por consiguiente, si todos los nodos de una zona se encuentran en mal estado, el nodo controlador desaloja al ritmo normal `--node-eviction-rate`. En el caso extremo de que todas las zonas se encuentran en mal estado (es decir, no responda ningún nodo del clúster), el controlador de nodos asume que hay algún tipo de problema con la conectividad del nodo máster y paraliza todos los desalojos hasta que se restablezca la conectividad.
